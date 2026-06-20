@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Target, Crosshair, MapPin, Ruler, Users } from "lucide-react";
+import { Target, Crosshair, MapPin, Trophy, Users } from "lucide-react";
 import { LS_LANG, type Lang } from "@/lib/app/use-lang";
 
 const tabs = [
   { href: "/rifle", icon: Target, label: "Rifle", af: "Geweer" },
   { href: "/ballistics", icon: Crosshair, label: "Ballistics", af: "Ballistiek" },
   { href: "/hunt-log", icon: MapPin, label: "Hunt Log", af: "Jag Log" },
-  { href: "/measurements", icon: Ruler, label: "Measure", af: "Meting" },
+  { href: "/measurements", icon: Trophy, label: "Trophy", af: "Trofee" },
   { href: "/community", icon: Users, label: "Community", af: "Gemeenskap" },
 ];
 
