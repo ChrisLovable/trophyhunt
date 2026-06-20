@@ -113,7 +113,7 @@ export function drawCanvas(
   const shY = cal.shoulder_y * H;
   const vX = cal.vital_x * W;
   const vY = cal.vital_y * H;
-  const ppc = (gY - shY) / cal.shoulder_height_cm;
+  const ppc = (gY - shY) > 0 ? (gY - shY) / cal.shoulder_height_cm : 1;
   const aboveZero = ladder.filter(r => r.distance_m > zeroDist);
   const fSz = Math.max(10, H * 0.027);
 

@@ -44,8 +44,9 @@ export function detectVitalDot(img: HTMLImageElement): { x: number; y: number } 
       const b = data[i + 2];
       const a = data[i + 3];
       if (a < 200) continue;
-      // Marker is ~rgb(74,158,255): blue strongly dominant, not pale sky.
-      if (b > 150 && b > r + 60 && b > g + 40 && r < 150) {
+      // Vital dot is ~rgb(0,120,215): dark blue, NOT the hoof line rgb(74,158,255)
+      // Hoof line has r=74, vital dot has r<20
+      if (b > 150 && b > r + 80 && b > g + 60 && r < 30 && g < 150) {
         sx += x;
         sy += y;
         n++;
