@@ -51,8 +51,8 @@ export default function TrophyPage() {
       return !q || t.name_en.toLowerCase().includes(q) || t.name_af.toLowerCase().includes(q);
     })
     .sort((a, b) => {
-      const av = a[sortCol] ?? "";
-      const bv = b[sortCol] ?? "";
+      const av = (sortCol === "name" ? (lang === "en" ? a.name_en : a.name_af) : a[sortCol]) ?? "";
+      const bv = (sortCol === "name" ? (lang === "en" ? b.name_en : b.name_af) : b[sortCol]) ?? "";
       return av.localeCompare(bv) * sortDir;
     });
 
