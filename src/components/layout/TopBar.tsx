@@ -20,7 +20,7 @@ export default function TopBar() {
       {/* Left: logo + title */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
         <Image
-          src="/logo.png"
+          src="/animals/logo.png"
           alt="Safari Outdoor"
           width={100}
           height={40}

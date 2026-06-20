@@ -215,7 +215,16 @@ export function DistSlider({
           {value}m
         </div>
       )}
-      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(Number(e.target.value))} className={cls} style={{ "--pct": pct } as React.CSSProperties} />
+      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(Number(e.target.value))} className={cls} style={{ "--pct": pct } as React.CSSProperties}
+        onTouchStart={e => { const t = e.touches[0]; (e.currentTarget as any)._startY = t.clientY; (e.currentTarget as any)._startX = t.clientX; }}
+        onTouchMove={e => {
+          const t = e.touches[0];
+          const el = e.currentTarget as any;
+          const dx = Math.abs(t.clientX - el._startX);
+          const dy = Math.abs(t.clientY - el._startY);
+          if (dy > dx) { e.preventDefault(); }
+        }}
+      />
       <div style={{ position: "relative", height: 32, marginTop: 6 }}>
         {ticks.filter(t => t >= min && t <= max).map(t => (
           <div key={t} style={{ position: "absolute", left: sliderPct(t, min, max), transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", pointerEvents: "none" }}>
