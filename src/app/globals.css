@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-gold:   #C8A96E;
+  --brand-dark:   #0D0F0A;
+  --brand-panel:  #131510;
+  --brand-border: #2A2D1E;
+  --brand-cream:  #E8E2D4;
+  --brand-muted:  #5A6040;
+  --zone-vital:   #50C878;
+  --zone-aim:     #4A9EFF;
+  --zone-warn:    #FF8844;
+  --zone-miss:    #FF4444;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--brand-dark);
+  color: var(--brand-cream);
+  font-family: "Inter", sans-serif;
+  overscroll-behavior: none;
+}
+
+/* Scrollable page area — clears fixed top bar + bottom chrome (ad + tabs) */
+.th-main {
+  padding-top: 3.5rem;
+  padding-bottom: calc(7.125rem + env(safe-area-inset-bottom, 0px));
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Fixed ad + bottom tabs — always visible, safe-area aware */
+.th-bottom-chrome {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: #0D0F0A;
+  border-top: 1px solid var(--brand-border);
+}
+
+.ad-banner {
+  width: 100%;
+  height: 50px;
+  background: #0a0c08;
+  border-bottom: 1px solid var(--brand-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  color: var(--brand-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.th-bottom-nav {
+  width: 100%;
+  background: #0D0F0A;
+  flex-shrink: 0;
+}
+
+/* 3D raised gold action buttons */
+.th-btn3d {
+  flex: 1;
+  min-height: 46px;
+  padding: 0 10px;
+  border-radius: 9px;
+  border: 1px solid #8a6020;
+  background: linear-gradient(180deg, #D4A843 0%, #A07830 100%);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+  color: #2a1a00;
+  font-family: "Rajdhani", sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: box-shadow 0.05s ease, transform 0.05s ease;
+}
+.th-btn3d:active {
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.45);
+  transform: translate(0, 1px);
+}
+.th-btn3d-danger {
+  border: 1px solid #7a1f1f;
+  background: linear-gradient(180deg, #E25555 0%, #A02828 100%);
+  color: #2a0000;
+}
