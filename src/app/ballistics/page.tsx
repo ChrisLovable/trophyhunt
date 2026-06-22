@@ -296,22 +296,22 @@ export default function BallisticsPage() {
                     {windSpeed > 0 ? windDirLabel() : ""}
                   </span>
                   <div
-                    style={{ width: 56, height: 56, borderRadius: "50%", background: "#0D0F0A", border: `2px solid ${windSpeed > 0 ? G : "#333"}`, position: "relative", cursor: windSpeed > 0 ? "grab" : "default", touchAction: "none", userSelect: "none", transition: "border-color 0.2s" }}
+                    style={{ width: 110, height: 110, borderRadius: "50%", background: "#0D0F0A", border: `3px solid ${windSpeed > 0 ? G : "#333"}`, position: "relative", cursor: windSpeed > 0 ? "grab" : "default", touchAction: "none", userSelect: "none", transition: "border-color 0.2s" }}
                     onPointerDown={e => { if (windSpeed === 0) return; setDialActive(true); e.currentTarget.setPointerCapture(e.pointerId); handleDialPointer(e); }}
                     onPointerMove={e => { if (dialActive && windSpeed > 0) handleDialPointer(e); }}
                     onPointerUp={() => setDialActive(false)}
                     onPointerCancel={() => setDialActive(false)}
                   >
                     {[0, 45, 90, 135, 180, 225, 270, 315].map(a => (
-                      <div key={a} style={{ position: "absolute", top: "50%", left: "50%", width: a % 90 === 0 ? 2 : 1, height: a % 90 === 0 ? 6 : 4, background: a % 90 === 0 ? "#555" : "#333", transformOrigin: "top center", transform: `translate(-50%,0) rotate(${a}deg) translateY(-24px)` }} />
+                      <div key={a} style={{ position: "absolute", top: "50%", left: "50%", width: a % 90 === 0 ? 2 : 1, height: a % 90 === 0 ? 10 : 6, background: a % 90 === 0 ? "#666" : "#444", transformOrigin: "top center", transform: `translate(-50%,0) rotate(${a}deg) translateY(-46px)` }} />
                     ))}
-                    <div style={{ position: "absolute", top: "50%", left: "50%", width: 2, height: 20, background: G, transformOrigin: "50% 100%", transform: `translate(-50%,-100%) rotate(${windDir}deg)`, borderRadius: 2 }} />
-                    <div style={{ position: "absolute", top: "50%", left: "50%", width: 6, height: 6, borderRadius: "50%", background: G, transform: "translate(-50%,-50%)" }} />
+                    <div style={{ position: "absolute", top: "50%", left: "50%", width: 3, height: 38, background: G, transformOrigin: "50% 100%", transform: `translate(-50%,-100%) rotate(${windDir}deg)`, borderRadius: 2 }} />
+                    <div style={{ position: "absolute", top: "50%", left: "50%", width: 10, height: 10, borderRadius: "50%", background: G, transform: "translate(-50%,-50%)" }} />
                   </div>
-                  {windSpeed > 0 && Math.abs(windage_cm) > 0.5 && (
-                    <span style={{ fontSize: "0.7rem", color: G, fontFamily: "Rajdhani,sans-serif", fontWeight: 700 }}>
-                      {Math.abs(Math.round(windage_cm))}cm {windage_cm > 0 ? "\u2192" : "\u2190"}
-                    </span>
+                  {windSpeed > 0 && (
+                    <div style={{ marginTop: 4, fontSize: "0.75rem", color: G, fontFamily: "Rajdhani,sans-serif", fontWeight: 700, textAlign: "center" }}>
+                      {windDirLabel()}{Math.abs(windage_cm) > 0.5 ? `  ${Math.abs(Math.round(windage_cm))}cm ${windage_cm > 0 ? "\u2190" : "\u2192"}` : ""}
+                    </div>
                   )}
                 </div>
               </div>
