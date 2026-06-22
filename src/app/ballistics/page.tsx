@@ -8,23 +8,20 @@ import { D, G, M, B } from "@/lib/app/brand";
 import { MAX_HOLDOVER_M, type CalData } from "@/lib/ballistics/calibration";
 import { BALLISTICS_T } from "@/lib/ballistics/i18n";
 import { drawCanvas } from "@/lib/ballistics/draw-canvas";
-import {
-  ladderRowAt, LADDER_STEP_M,
-} from "@/lib/ballistics/holdover-math";
+import { calculateWindage } from "@/lib/ballistics/engine";
+import { ladderRowAt, LADDER_STEP_M } from "@/lib/ballistics/holdover-math";
 import type { BallisticsResult } from "@/lib/types/ballistics";
 import { deleteRifle } from "@/lib/rifle/storage";
 import { useAimSession } from "@/hooks/use-aim-session";
 import { BallisticsPickers } from "@/components/ballistics/BallisticsPickers";
 import { SpeciesDetailsPanel } from "@/components/ballistics/SpeciesDetailsPanel";
-import {
-  Card, DistSlider, PageHeader, SliderStyles,
-} from "@/components/ballistics/ui";
+import { Card, DistSlider, PageHeader, SliderStyles } from "@/components/ballistics/ui";
 
 function calWithVitalDot(calData: CalData, vital: { x: number; y: number } | null): CalData {
   if (!vital) return calData;
   if (
-    Math.abs(vital.x - calData.vital_x) < 0.0005
-    && Math.abs(vital.y - calData.vital_y) < 0.0005
+    Math.abs(vital.x - calData.vital_x) < 0.0005 &&
+    Math.abs(vital.y - calData.vital_y) < 0.0005
   ) return calData;
   return { ...calData, vital_x: vital.x, vital_y: vital.y };
 }
@@ -39,15 +36,21 @@ export default function BallisticsPage() {
     selectAimRifle, setSpeciesId, setHighlightDist,
   } = useAimSession();
 
-  const [sliderPulse, setSliderPulse] = useState(false);
-  const [aimDragging, setAimDragging] = useState(false);
-  const [fallbackIdx, setFallbackIdx] = useState(0);
-  const imgRef = useRef<HTMLImageElement>(null);
-  const vitalDotRef = useRef<{ x: number; y: number } | null>(null);
-  const calRef = useRef<CalData>(calData);
+  const [sliderPulse, setSliderPulse]   = useState(false);
+  const [aimDragging, setAimDragging]   = useState(false);
+  const [fallbackIdx, setFallbackIdx]   = useState(0);
+  const [windSpeed,   setWindSpeed]     = useState(0);
+  const [windDir,     setWindDir]       = useState(90);
+  const [dialActive,  setDialActive]    = useState(false);
 
-  calRef.current = calWithVitalDot(calData, vitalDotRef.current);
+  const imgRef        = useRef<HTMLImageElement>(null);
+  const vitalDotRef   = useRef<{ x: number; y: number } | null>(null);
+  const calRef        = useRef<CalData>(calData);
+  const canvasRef     = useRef<HTMLCanvasElement>(null);
+  const containerRef  = useRef<HTMLDivElement>(null);
+  const windage_cmRef = useRef(0);
 
+  // calRef is updated only in runDetection() and species change effect — never on render
   const imageCandidates = useMemo(
     () => animalImageCandidates(species.image_path),
     [species.image_path],
@@ -67,14 +70,16 @@ export default function BallisticsPage() {
     return ticks;
   }, []);
 
+  const windage_cm = useMemo(() => {
+    if (!isAimReady || windSpeed <= 0 || !highlightRow) return 0;
+    return calculateWindage(aimBc, aimMv, aimZero, highlightDist, windSpeed, windDir);
+  }, [isAimReady, windSpeed, windDir, aimBc, aimMv, aimZero, highlightDist, highlightRow]);
+
   function handleSliderDist(v: number) {
     setHighlightDist(v);
     setSliderPulse(true);
     window.setTimeout(() => setSliderPulse(false), 180);
   }
-
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const drawRef = useRef({
     ladder: [] as BallisticsResult[],
@@ -85,7 +90,7 @@ export default function BallisticsPage() {
   });
   drawRef.current = { ladder, highlightDist, highlightRow, isAimReady, aimZero };
 
-  const redraw = useCallback(() => {
+  const redraw = useCallback((windCm = 0) => {
     const canvas = canvasRef.current;
     const el = containerRef.current;
     const { ladder: L, highlightDist: hd, highlightRow: hr, isAimReady: ready, aimZero: z } = drawRef.current;
@@ -93,7 +98,7 @@ export default function BallisticsPage() {
     const W = el.offsetWidth;
     const H = el.offsetHeight;
     if (W > 0 && H > 0) {
-      drawCanvas(canvas, W, H, L, hd, hr, z, calRef.current, false, false);
+      drawCanvas(canvas, W, H, L, hd, hr, z, calRef.current, false, false, windCm);
     }
   }, []);
 
@@ -103,20 +108,24 @@ export default function BallisticsPage() {
     const next = detectVitalDot(img);
     const prev = vitalDotRef.current;
     if (!next && !prev) return false;
-    if (next && prev
-      && Math.abs(next.x - prev.x) < 0.0005
-      && Math.abs(next.y - prev.y) < 0.0005) return false;
+    if (next && prev &&
+      Math.abs(next.x - prev.x) < 0.0005 &&
+      Math.abs(next.y - prev.y) < 0.0005) return false;
     vitalDotRef.current = next;
-    calRef.current = calWithVitalDot(calData, next);
+    // Lock calRef to detected position — never allow render to overwrite this
+    calRef.current = { ...calData, ...(next ? { vital_x: next.x, vital_y: next.y } : {}) };
     return true;
   }, [calData]);
 
-  useEffect(() => { redraw(); }, [ladder, highlightDist, highlightRow, isAimReady, aimZero, calData, redraw]);
+  useEffect(() => {
+    windage_cmRef.current = windage_cm;
+    redraw(windage_cm);
+  }, [ladder, highlightDist, highlightRow, isAimReady, aimZero, calData, redraw, windage_cm]);
 
   useEffect(() => {
     setFallbackIdx(0);
     vitalDotRef.current = null;
-    calRef.current = calData;
+    calRef.current = calData; // species.ts default until image loads and detection runs
   }, [speciesId, calData]);
 
   useLayoutEffect(() => {
@@ -127,14 +136,12 @@ export default function BallisticsPage() {
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => redraw());
+    const ro = new ResizeObserver(() => redraw(windage_cmRef.current));
     ro.observe(el);
     return () => ro.disconnect();
   }, [redraw]);
 
-  function onSelectSpeciesId(id: string) {
-    setSpeciesId(id);
-  }
+  function onSelectSpeciesId(id: string) { setSpeciesId(id); }
 
   function ppc(H: number) {
     const c = calRef.current;
@@ -153,26 +160,19 @@ export default function BallisticsPage() {
     const vY = c.vital_y * H;
     const p = ppc(H);
     if (p <= 0) return highlightDist;
-
     const hoCm = Math.max(0, (vY - cy) / p);
     const candidates = ladder.filter(r => r.distance_m > aimZero);
     if (candidates.length === 0) return highlightDist;
-
     let best = candidates[0];
     let bestDiff = Math.abs(best.holdover_cm - hoCm);
     for (let i = 1; i < candidates.length; i++) {
       const diff = Math.abs(candidates[i].holdover_cm - hoCm);
-      if (diff < bestDiff) {
-        bestDiff = diff;
-        best = candidates[i];
-      }
+      if (diff < bestDiff) { bestDiff = diff; best = candidates[i]; }
     }
     return best.distance_m;
   }
 
-  function hitRadius(H: number) {
-    return Math.max(22, H * 0.045);
-  }
+  function hitRadius(H: number) { return Math.max(22, H * 0.045); }
 
   function hitLadderDot(cx: number, cy: number, W: number, H: number): number | null {
     const c = calRef.current;
@@ -187,27 +187,19 @@ export default function BallisticsPage() {
 
   function handleCanvasPointerDown(e: React.PointerEvent<HTMLCanvasElement>) {
     if (!isAimReady || !highlightRow) return;
-
     const rect = e.currentTarget.getBoundingClientRect();
     const cx = e.clientX - rect.left;
     const cy = e.clientY - rect.top;
     const W = rect.width;
     const H = rect.height;
-
     const c = calRef.current;
     const vX = c.vital_x * W;
     const hy = highlightDotY(H);
     const dr = hitRadius(H);
-
     const ladderHit = hitLadderDot(cx, cy, W, H);
-    if (ladderHit !== null) {
-      setHighlightDist(ladderHit);
-      return;
-    }
-
+    if (ladderHit !== null) { setHighlightDist(ladderHit); return; }
     const onAimLine = Math.abs(cx - vX) < dr;
     const onGoldDot = hy !== null && Math.hypot(cx - vX, cy - hy) < dr * 1.2;
-
     if (onGoldDot || onAimLine) {
       setAimDragging(true);
       setHighlightDist(distFromAimLineY(cy, H));
@@ -222,8 +214,36 @@ export default function BallisticsPage() {
     setHighlightDist(distFromAimLineY(e.clientY - rect.top, rect.height));
   }
 
-  function handleCanvasPointerUp() {
-    setAimDragging(false);
+  function handleCanvasPointerUp() { setAimDragging(false); }
+
+  function handleDialPointer(e: React.PointerEvent<HTMLDivElement>) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const dx = e.clientX - (rect.left + rect.width / 2);
+    const dy = e.clientY - (rect.top + rect.height / 2);
+    let a = Math.round(Math.atan2(dx, -dy) * 180 / Math.PI);
+    if (a < 0) a += 360;
+    const snapped = Math.round(a / 45) * 45;
+    setWindDir(Math.abs(snapped - a) < 15 ? snapped % 360 : a);
+  }
+
+  function windSpeedLabel(ms: number): string {
+    if (ms === 0)  return lang === "en" ? "No wind"           : "Geen wind";
+    if (ms <= 1)   return lang === "en" ? "Smoke drift"       : "Rookdryf";
+    if (ms <= 3)   return lang === "en" ? "Light breeze"      : "Ligte bries";
+    if (ms <= 5)   return lang === "en" ? "Gentle breeze"     : "Sagte bries";
+    if (ms <= 7)   return lang === "en" ? "Moderate breeze"   : "Matige bries";
+    if (ms <= 9)   return lang === "en" ? "Fresh breeze"      : "Fris bries";
+    if (ms <= 11)  return lang === "en" ? "Strong breeze"     : "Sterk bries";
+    if (ms <= 13)  return lang === "en" ? "Near gale"         : "Byna stormwind";
+    return           lang === "en" ? "Gale \u2014 tough shot" : "Storm \u2014 moeilik";
+  }
+
+  function windDirLabel(): string {
+    const dirs = lang === "en"
+      ? ["Head", "", "Right", "", "Tail", "", "Left", ""]
+      : ["Voor",  "", "Regs",  "", "Agter","", "Links",""];
+    const idx = Math.round(((windDir % 360) + 360) % 360 / 45) % 8;
+    return dirs[idx] || `${windDir}\u00b0`;
   }
 
   const canvasCursor = isAimReady ? (aimDragging ? "grabbing" : "grab") : "default";
@@ -236,8 +256,7 @@ export default function BallisticsPage() {
       <Card>
         <div style={{ padding: "14px 16px 16px" }}>
           <BallisticsPickers
-            lang={lang}
-            t={t}
+            lang={lang} t={t}
             savedRifles={savedRifles}
             aimRifleId={aimRifleId}
             aimRifle={aimRifle}
@@ -248,25 +267,58 @@ export default function BallisticsPage() {
           />
 
           {isAimReady && highlightRow && (
-            <div style={{ padding: "12px 0" }}>
+            <div style={{ padding: "10px 0 8px" }}>
               <DistSlider min={minDist} max={MAX_HOLDOVER_M} step={LADDER_STEP_M} value={highlightDist} onChange={handleSliderDist} ticks={sliderTicks} giant pulse={sliderPulse} showValue />
+
+              {/* Wind row */}
+              <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 10 }}>
+
+                {/* Wind speed */}
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                    <span style={{ fontSize: "0.7rem", color: "#888", fontFamily: "Rajdhani,sans-serif", fontWeight: 700, letterSpacing: "0.06em" }}>WIND</span>
+                    <span style={{ fontSize: "0.7rem", color: G, fontFamily: "Rajdhani,sans-serif", fontWeight: 700 }}>
+                      {windSpeedLabel(windSpeed)}{windSpeed > 0 ? `  \u00b7  ${windSpeed} m/s` : ""}
+                    </span>
+                  </div>
+                  <input
+                    type="range" min={0} max={15} step={1}
+                    value={windSpeed}
+                    onChange={e => setWindSpeed(Number(e.target.value))}
+                    className="th-slider"
+                    style={{ "--pct": `${(windSpeed / 15) * 100}%` } as React.CSSProperties}
+                  />
+                </div>
+
+                {/* Direction dial */}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, opacity: windSpeed === 0 ? 0.3 : 1, transition: "opacity 0.2s" }}>
+                  <span style={{ fontSize: "0.65rem", color: G, fontFamily: "Rajdhani,sans-serif", fontWeight: 700, minHeight: 14 }}>
+                    {windSpeed > 0 ? windDirLabel() : ""}
+                  </span>
+                  <div
+                    style={{ width: 56, height: 56, borderRadius: "50%", background: "#0D0F0A", border: `2px solid ${windSpeed > 0 ? G : "#333"}`, position: "relative", cursor: windSpeed > 0 ? "grab" : "default", touchAction: "none", userSelect: "none", transition: "border-color 0.2s" }}
+                    onPointerDown={e => { if (windSpeed === 0) return; setDialActive(true); e.currentTarget.setPointerCapture(e.pointerId); handleDialPointer(e); }}
+                    onPointerMove={e => { if (dialActive && windSpeed > 0) handleDialPointer(e); }}
+                    onPointerUp={() => setDialActive(false)}
+                    onPointerCancel={() => setDialActive(false)}
+                  >
+                    {[0, 45, 90, 135, 180, 225, 270, 315].map(a => (
+                      <div key={a} style={{ position: "absolute", top: "50%", left: "50%", width: a % 90 === 0 ? 2 : 1, height: a % 90 === 0 ? 6 : 4, background: a % 90 === 0 ? "#555" : "#333", transformOrigin: "top center", transform: `translate(-50%,0) rotate(${a}deg) translateY(-24px)` }} />
+                    ))}
+                    <div style={{ position: "absolute", top: "50%", left: "50%", width: 2, height: 20, background: G, transformOrigin: "50% 100%", transform: `translate(-50%,-100%) rotate(${windDir}deg)`, borderRadius: 2 }} />
+                    <div style={{ position: "absolute", top: "50%", left: "50%", width: 6, height: 6, borderRadius: "50%", background: G, transform: "translate(-50%,-50%)" }} />
+                  </div>
+                  {windSpeed > 0 && Math.abs(windage_cm) > 0.5 && (
+                    <span style={{ fontSize: "0.7rem", color: G, fontFamily: "Rajdhani,sans-serif", fontWeight: 700 }}>
+                      {Math.abs(Math.round(windage_cm))}cm {windage_cm > 0 ? "\u2192" : "\u2190"}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
-          {process.env.NODE_ENV === "development" && (
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 4 }}>
-              <a
-                href={`/calibration?species=${speciesId}`}
-                style={{
-                  fontSize: "0.62rem", color: M, textDecoration: "none",
-                  padding: "3px 8px", borderRadius: 4,
-                  border: `1px solid ${B}`, background: "rgba(19,21,16,0.9)",
-                }}
-              >
-                ⚙ Kalibreer
-              </a>
-            </div>
-          )}
+
 
           <div ref={containerRef} style={{ position: "relative", width: "100%", lineHeight: 0, userSelect: "none", borderRadius: 8, overflow: "hidden", border: `1px solid ${B}`, background: D }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -275,16 +327,10 @@ export default function BallisticsPage() {
               key={`${speciesId}-${fallbackIdx}`}
               src={displaySrc}
               alt={lang === "en" ? species.name_en : species.name_af}
+              crossOrigin="anonymous"
               style={{ width: "100%", display: "block", height: "auto" }}
-              onLoad={() => {
-                if (runDetection()) redraw();
-                else requestAnimationFrame(() => redraw());
-              }}
-              onError={() => {
-                if (fallbackIdx + 1 < imageCandidates.length) {
-                  setFallbackIdx(i => i + 1);
-                }
-              }}
+              onLoad={() => { if (runDetection()) redraw(windage_cmRef.current); else requestAnimationFrame(() => redraw(windage_cmRef.current)); }}
+              onError={() => { if (fallbackIdx + 1 < imageCandidates.length) setFallbackIdx(i => i + 1); }}
             />
             <canvas
               ref={canvasRef}
@@ -292,7 +338,7 @@ export default function BallisticsPage() {
               onPointerMove={handleCanvasPointerMove}
               onPointerUp={handleCanvasPointerUp}
               onPointerCancel={handleCanvasPointerUp}
-              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", cursor: canvasCursor, touchAction: "none" }}
+              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", cursor: canvasCursor, touchAction: aimDragging ? "none" : "pan-y" }}
             />
           </div>
 
@@ -304,13 +350,7 @@ export default function BallisticsPage() {
             </p>
           )}
 
-          <SpeciesDetailsPanel
-            key={speciesId}
-            lang={lang}
-            t={t}
-            speciesId={speciesId}
-            selectedCaliber={savedRifles.find(r => r.id === aimRifleId)?.caliber}
-          />
+          <SpeciesDetailsPanel key={speciesId} lang={lang} t={t} speciesId={speciesId} selectedCaliber={savedRifles.find(r => r.id === aimRifleId)?.caliber} />
         </div>
       </Card>
     </div>

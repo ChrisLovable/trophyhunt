@@ -222,6 +222,24 @@ export function checkBallisticsSanity(bc: number, mv_ms: number, zero_m: number)
 }
 
 // ─── Dev-mode validation ──────────────────────────────────────────────────────
+
+export function calculateWindage(
+  bc: number,
+  mv_ms: number,
+  zero_m: number,
+  target_m: number,
+  wind_speed_ms: number,
+  wind_direction_deg: number,
+  model: DragModel = "G1",
+): number {
+  if (wind_speed_ms <= 0 || target_m <= zero_m) return 0;
+  const wind_rad = (wind_direction_deg * Math.PI) / 180;
+  const wind_component = wind_speed_ms * Math.sin(wind_rad);
+  if (Math.abs(wind_component) < 0.001) return 0;
+  const tof_t = calculateTrajectory(bc, mv_ms, zero_m, target_m, {}, model).time_of_flight_s;
+  const tof_z = calculateTrajectory(bc, mv_ms, zero_m, zero_m,   {}, model).time_of_flight_s;
+  return wind_component * (tof_t - tof_z * (target_m / zero_m)) * 100;
+}
 if (typeof process !== "undefined" && process.env.NODE_ENV === "development") {
   (function runValidation() {
     console.log("── TrophyHunt ballistics validation ──");
