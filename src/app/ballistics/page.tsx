@@ -30,12 +30,6 @@ export default function BallisticsPage() {
   const { lang, toggleLang } = useLang();
   const t = BALLISTICS_T[lang];
 
-  const {
-    savedRifles, aimRifleId, aimRifle, speciesId, species, calData,
-    aimBc, aimMv, aimZero, isAimReady, highlightDist, minDist, ladder,
-    selectAimRifle, setSpeciesId, setHighlightDist,
-  } = useAimSession(altitude);
-
   const [sliderPulse, setSliderPulse]   = useState(false);
   const [aimDragging, setAimDragging]   = useState(false);
   const [fallbackIdx, setFallbackIdx]   = useState(0);
@@ -43,6 +37,12 @@ export default function BallisticsPage() {
   const [windDir,     setWindDir]       = useState(90);
   const [dialActive,  setDialActive]    = useState(false);
   const [altitude,    setAltitude]      = useState(1500);
+
+  const {
+    savedRifles, aimRifleId, aimRifle, speciesId, species, calData,
+    aimBc, aimMv, aimZero, isAimReady, highlightDist, minDist, ladder,
+    selectAimRifle, setSpeciesId, setHighlightDist,
+  } = useAimSession(altitude);
 
   const imgRef        = useRef<HTMLImageElement>(null);
   const vitalDotRef   = useRef<{ x: number; y: number } | null>(null);

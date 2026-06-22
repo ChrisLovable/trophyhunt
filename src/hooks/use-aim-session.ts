@@ -71,8 +71,8 @@ export function useAimSession(altitude_m = 1500) {
 
   const ladder = useMemo<BallisticsResult[]>(() => {
     if (!isAimReady) return [];
-    return calculateLadder(aimBc, aimMv, aimZero, MAX_HOLDOVER_M, LADDER_STEP_M);
-  }, [aimBc, aimMv, aimZero, isAimReady]);
+    return calculateLadder(aimBc, aimMv, aimZero, MAX_HOLDOVER_M, LADDER_STEP_M, { altitude_m });
+  }, [aimBc, aimMv, aimZero, isAimReady, altitude_m]);
 
   useEffect(() => {
     setSliderDist(d => {
