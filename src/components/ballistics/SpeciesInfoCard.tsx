@@ -114,7 +114,7 @@ export default function SpeciesInfoCard({
     <div style={{ padding: embedded ? "0 0 12px" : "0 16px 12px" }}>
       <div style={{
         background: P, border: `1px solid ${B}`, borderRadius: 12, overflow: "hidden",
-        borderLeft: `4px solid ${isDangerous ? "#FF4444" : G}`,
+        borderLeft: `4px solid ${G}`,
       }}>
 
         {/* Header */}
@@ -140,11 +140,7 @@ export default function SpeciesInfoCard({
             </div>
             <span style={{ color: M, fontSize: "0.75rem", flexShrink: 0 }}>▼</span>
           </div>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
-            <Badge label={t.trophyAnimal} color={G} />
-            <Badge label={DANGER_LABEL[lang][info.danger_level]} color={DANGER_COLOR[info.danger_level]} />
-            <Badge label={DIFF_LABEL[lang][info.difficulty]} color={M} />
-          </div>
+
         </button>
 
         {/* Tab bar */}
@@ -173,22 +169,7 @@ export default function SpeciesInfoCard({
           {/* ── HUNT TAB ── */}
           {activeTab === "hunt" && (
             <>
-              {/* Shot placement */}
-              <div style={{
-                padding: "10px 12px", background: D, borderRadius: 8,
-                border: `1px solid ${isDangerous ? "#FF444440" : G + "30"}`,
-                marginBottom: 14,
-              }}>
-                <div style={{
-                  fontSize: "0.62rem", color: G, fontFamily: "Rajdhani,sans-serif",
-                  fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 5,
-                }}>
-                  🎯 {t.shot}
-                </div>
-                <div style={{ fontSize: "0.82rem", color: C, lineHeight: 1.55 }}>
-                  {info.shot_placement}
-                </div>
-              </div>
+
 
               {/* Calibers */}
               <div style={{ marginBottom: 14 }}>

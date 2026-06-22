@@ -15,19 +15,22 @@ interface Props {
   selectedCaliber?: string;
 }
 
-function hornLabel(lang: Lang, t: Record<string, string>, horn: "spiral" | "straight" | "curved" | "none") {
-  return { spiral: t.hornSpiral, straight: t.hornStraight, curved: t.hornCurved, none: t.hornNone }[horn];
-}
-
 export function SpeciesDetailsPanel({ lang, t, speciesId, selectedCaliber }: Props) {
   const [infoOpen, setInfoOpen] = useState(true);
-  const species = useMemo(
-    () => getSpeciesById(speciesId) ?? SPECIES[0],
-    [speciesId],
-  );
+  const species = useMemo(() => getSpeciesById(speciesId) ?? SPECIES[0], [speciesId]);
   const speciesInfo = useMemo(() => getSpeciesInfoById(speciesId), [speciesId]);
 
   useEffect(() => { setInfoOpen(true); }, [speciesId]);
+
+  const weightLabel = lang === "en" ? "Weight" : "Gewig";
+  const shoulderLabel = lang === "en" ? "Avg. shoulder height" : "Gem. skouerhoogte";
+  const maleLabel = lang === "en" ? "Male" : "Mannetjie";
+  const femaleLabel = lang === "en" ? "Female" : "Wyfie";
+
+  // Weight ranges from species-info if available, else fall back to single value
+  const weightValue = speciesInfo
+    ? `♂ ${maleLabel}: ${speciesInfo.live_weight_kg.min}–${speciesInfo.live_weight_kg.max}kg`
+    : `${species.weight_kg} kg`;
 
   return (
     <div style={{ marginTop: 14 }}>
@@ -36,12 +39,8 @@ export function SpeciesDetailsPanel({ lang, t, speciesId, selectedCaliber }: Pro
           {t.anatomyStats}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 12px" }}>
-          <Stat label={t.statWeight} value={`${species.weight_kg} kg`} />
-          <Stat label={t.statShoulder} value={`${species.shoulder_height_cm} cm`} />
-          <Stat label={t.statBodyLength} value={`${species.body_length_cm} cm`} />
-          <Stat label={t.statVitalHeight} value={`${species.vital_zone_height_cm} cm`} />
-          <Stat label={t.statVitalRadius} value={`${species.vital_zone_radius_cm} cm`} />
-          <Stat label={t.statHorn} value={hornLabel(lang, t, species.horn_measure)} />
+          <Stat label={weightLabel} value={weightValue} />
+          <Stat label={shoulderLabel} value={`${species.shoulder_height_cm} cm`} />
         </div>
         {species.notes && !species.vital_zone_special && (
           <p style={{ margin: "10px 0 0", fontSize: "0.75rem", color: M, lineHeight: 1.45, fontStyle: "italic" }}>{species.notes}</p>

@@ -34,7 +34,7 @@ export default function BallisticsPage() {
     savedRifles, aimRifleId, aimRifle, speciesId, species, calData,
     aimBc, aimMv, aimZero, isAimReady, highlightDist, minDist, ladder,
     selectAimRifle, setSpeciesId, setHighlightDist,
-  } = useAimSession();
+  } = useAimSession(altitude);
 
   const [sliderPulse, setSliderPulse]   = useState(false);
   const [aimDragging, setAimDragging]   = useState(false);
@@ -42,6 +42,7 @@ export default function BallisticsPage() {
   const [windSpeed,   setWindSpeed]     = useState(0);
   const [windDir,     setWindDir]       = useState(90);
   const [dialActive,  setDialActive]    = useState(false);
+  const [altitude,    setAltitude]      = useState(1500);
 
   const imgRef        = useRef<HTMLImageElement>(null);
   const vitalDotRef   = useRef<{ x: number; y: number } | null>(null);
@@ -305,7 +306,11 @@ export default function BallisticsPage() {
                     {[0, 45, 90, 135, 180, 225, 270, 315].map(a => (
                       <div key={a} style={{ position: "absolute", top: "50%", left: "50%", width: a % 90 === 0 ? 2 : 1, height: a % 90 === 0 ? 10 : 6, background: a % 90 === 0 ? "#666" : "#444", transformOrigin: "top center", transform: `translate(-50%,0) rotate(${a}deg) translateY(-46px)` }} />
                     ))}
-                    <div style={{ position: "absolute", top: "50%", left: "50%", width: 3, height: 38, background: G, transformOrigin: "50% 100%", transform: `translate(-50%,-100%) rotate(${windDir}deg)`, borderRadius: 2 }} />
+                    {/* Arrow shaft */}
+                    <div style={{ position: "absolute", top: "50%", left: "50%", width: 3, height: 34, background: G, transformOrigin: "50% 100%", transform: `translate(-50%,-100%) rotate(${windDir}deg)`, borderRadius: 2 }} />
+                    {/* Arrowhead — triangle at tip */}
+                    <div style={{ position: "absolute", top: "50%", left: "50%", width: 0, height: 0, borderLeft: "6px solid transparent", borderRight: "6px solid transparent", borderBottom: `12px solid ${G}`, transformOrigin: "50% 46px", transform: `translate(-50%, -46px) rotate(${windDir}deg)` }} />
+                    {/* Centre dot */}
                     <div style={{ position: "absolute", top: "50%", left: "50%", width: 10, height: 10, borderRadius: "50%", background: G, transform: "translate(-50%,-50%)" }} />
                   </div>
                   {windSpeed > 0 && (
@@ -313,6 +318,29 @@ export default function BallisticsPage() {
                       {windDirLabel()}{Math.abs(windage_cm) > 0.5 ? `  ${Math.abs(Math.round(windage_cm))}cm ${windage_cm > 0 ? "\u2190" : "\u2192"}` : ""}
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* Altitude slider */}
+              <div style={{ marginTop: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ fontSize: "0.7rem", color: "#888", fontFamily: "Rajdhani,sans-serif", fontWeight: 700, letterSpacing: "0.06em" }}>
+                    {lang === "en" ? "ALTITUDE" : "HOOGTE"}
+                  </span>
+                  <span style={{ fontSize: "0.7rem", color: G, fontFamily: "Rajdhani,sans-serif", fontWeight: 700 }}>
+                    {altitude}m {lang === "en" ? "above sea level" : "bo seevlak"}
+                  </span>
+                </div>
+                <input
+                  type="range" min={0} max={2500} step={100}
+                  value={altitude}
+                  onChange={e => setAltitude(Number(e.target.value))}
+                  className="th-slider"
+                  style={{ "--pct": `${(altitude / 2500) * 100}%` } as React.CSSProperties}
+                />
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2, fontSize: "0.6rem", color: "#555", fontFamily: "Rajdhani,sans-serif" }}>
+                  <span>{lang === "en" ? "Sea level" : "Seevlak"}</span>
+                  <span>Drakensberg ~3000m</span>
                 </div>
               </div>
             </div>

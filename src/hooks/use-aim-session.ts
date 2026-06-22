@@ -14,7 +14,7 @@ import { useSavedRifles } from "@/hooks/use-saved-rifles";
 const LS_SPECIES = "trophyhunt_species_v1";
 const LS_AIM_DIST = "trophyhunt_aim_dist_v1";
 
-export function useAimSession() {
+export function useAimSession(altitude_m = 1500) {
   const { savedRifles, aimRifleId, aimRifle, selectAimRifle } = useSavedRifles();
 
   const [speciesId, setSpeciesIdState] = useState("kudu");

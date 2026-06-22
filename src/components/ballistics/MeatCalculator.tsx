@@ -263,12 +263,17 @@ export default function MeatCalculator({ speciesId, lang }: Props) {
       </div>
 
       {/* ── Products header ── */}
-      <div style={{
-        fontSize: "0.68rem", color: M, letterSpacing: "0.08em",
-        textTransform: "uppercase", marginBottom: 10,
-        fontFamily: "Rajdhani,sans-serif", fontWeight: 700,
-      }}>
-        {t.whatYouGet}
+      <div style={{ marginBottom: 10 }}>
+        <div style={{
+          fontSize: "0.68rem", color: M, letterSpacing: "0.08em",
+          textTransform: "uppercase", marginBottom: 2,
+          fontFamily: "Rajdhani,sans-serif", fontWeight: 700,
+        }}>
+          {t.whatYouGet}
+        </div>
+        <div style={{ fontSize: "0.62rem", color: M, fontStyle: "italic" }}>
+          {lang === "en" ? "Options — not all from same meat" : "Opsies — nie alles uit dieselfde vleis"}
+        </div>
       </div>
 
       {/* ── Product cards ── */}
@@ -288,6 +293,7 @@ export default function MeatCalculator({ speciesId, lang }: Props) {
           </div>
           <div style={{ fontSize: "0.7rem", color: C, fontWeight: 600, marginTop: 3 }}>Biltong</div>
           <div style={{ fontSize: "0.58rem", color: M, marginTop: 2, lineHeight: 1.3 }}>{t.biltongSub}</div>
+          <div style={{ fontSize: "0.58rem", color: M, lineHeight: 1.3 }}>{lang === "en" ? "from all wet meat" : "van alle nat vleis"}</div>
         </div>
 
         {/* Boerewors */}
