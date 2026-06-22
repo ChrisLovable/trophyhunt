@@ -253,4 +253,21 @@ export function CmStepper({ value, onChange, min, max, step }: { value: number; 
 }
 
 export const inputSt: React.CSSProperties = { padding: "10px 12px", background: P, border: `1px solid ${B}`, color: C, borderRadius: 8, fontSize: "1rem", fontFamily: "Rajdhani,sans-serif", width: "100%", minHeight: 44, boxSizing: "border-box" };
-export const selectSt: React.CSSProperties = { width: "100%", padding: "10px 12px", background: P, border: `1px solid ${B}`, color: C, borderRadius: 8, fontSize: "1rem", fontFamily: "Rajdhani,sans-serif", minHeight: 44 };
+export const selectSt: React.CSSProperties = {
+  width: "100%",
+  padding: "9px 32px 9px 12px",
+  background: P,
+  border: `1px solid ${B}`,
+  borderRadius: 8,
+  color: C,
+  fontSize: "0.95rem",
+  fontFamily: "Rajdhani,sans-serif",
+  fontWeight: 600,
+  minHeight: 42,
+  appearance: "none",
+  WebkitAppearance: "none",
+  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2212%27 viewBox=%270 0 12 12%27%3E%3Cpath fill=%27%23C8A96E%27 d=%27M6 8L1 3h10z%27/%3E%3C/svg%3E")`,
+  backgroundRepeat: "no-repeat",
+  backgroundPosition: "right 10px center",
+  cursor: "pointer",
+};

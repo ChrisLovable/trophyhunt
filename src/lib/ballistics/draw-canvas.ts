@@ -181,7 +181,7 @@ export function drawCanvas(
     const line1 = `${Math.round(highlightDist)}m  \u2191${hoCm}cm  ${hoMOA.toFixed(1)}MOA  ${hoClk}clk`;
     const line2 = hasWind ? `${wDir} ${wCm.toFixed(1)}cm  ${wMOA.toFixed(1)}MOA  ${wClk}clk` : "";
     const lines = hasWind ? [line1, line2] : [line1];
-    const bFsz  = Math.max(9, H * 0.020);
+    const bFsz  = Math.max(16, H * 0.040);
     ctx.font = `700 ${bFsz}px Rajdhani,sans-serif`;
     const boxW = Math.max(...lines.map(l => ctx.measureText(l).width)) + 14;
     const boxH = lines.length * bFsz * 1.4 + 8;
